@@ -103,6 +103,21 @@ spec:
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
       initContainers:
+      # sia init container
+      - name: init-sia
+        image: docker.ouroath.com:4443/containers/sia-eks:1.22.0-20220401
+        imagePullPolicy: Always
+        command: ['sh', '-c', "while :; do /usr/sbin/siad -regionalsts -cmd post && break; done"]
+        resources:
+          requests:
+            memory: 50M
+            cpu: 10m
+        volumeMounts:
+          - name: sia-volume
+            mountPath: /var/lib/sia
+          - name: sia
+            mountPath: /etc/sia/sia_config
+            subPath: sia_config
       # This init container will wait for zookeeper to be ready before
       # deploying the bookies
       - name: wait-zookeeper-ready
@@ -160,6 +175,20 @@ spec:
         volumeMounts:
         {{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
       containers:
+      - name: sia
+        image: docker.ouroath.com:4443/containers/sia-eks:1.22.0-20220401
+        resources:
+          requests:
+            memory: 50M
+            cpu: 10m
+        volumeMounts:
+          - mountPath: /var/lib/sia
+            name: sia-volume
+          - mountPath: /var/run/tls
+            name: tls-certs
+          - name: sia
+            mountPath: /etc/sia/sia_config
+            subPath: sia_config
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
         image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
         imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
@@ -243,6 +272,10 @@ spec:
             readOnly: true
           {{- end }}
           {{- end }}
+          - mountPath: /var/lib/sia
+            name: sia-volume
+          - mountPath: /var/run/tls
+            name: tls-certs
           {{- if .Values.broker.extraVolumeMounts }}
 {{ toYaml .Values.broker.extraVolumeMounts | indent 10 }}
           {{- end }}
@@ -252,7 +285,19 @@ spec:
           readOnlyRootFilesystem: false
       {{- end }}
       volumes:
-      {{- if .Values.broker.extraVolumes }}
+        - name: tls-certs
+          emptyDir:
+            medium: Memory
+        - name: sia-volume
+          emptyDir:
+            medium: Memory
+        - name: sia
+          configMap:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sia"
+            items:
+              - key: sia_config
+                path: sia_config
+  {{- if .Values.broker.extraVolumes }}
 {{ toYaml .Values.broker.extraVolumes | indent 6 }}
       {{- end }}
       {{- if .Values.auth.authentication.enabled }}

@@ -144,3 +144,21 @@ data:
   {{- end }}
 {{ toYaml .Values.broker.configData | indent 2 }}
 {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-sia"
+  namespace: {{ template "pulsar.namespace" . }}
+data:
+  sia_config: |
+    {
+      "version": "1.0.0",
+      "service": "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-acct",
+      "accounts": [
+        {
+          "domain":  "cms.aws.nonprod",
+          "account": "454759051864"
+        }
+      ]
+    }

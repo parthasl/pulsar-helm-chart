@@ -134,7 +134,7 @@ broker:
   configData:
    functionsWorkerEnabled: "false"
    PULSAR_ROUTING_APPENDER_DEFAULT: "RollingFile"
-   sia_config: |
+   sia_config11: |
     {
       "version": "1.0.0",
       "service": "awstest",

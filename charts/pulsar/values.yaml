@@ -769,7 +769,8 @@ broker:
   ### Broker service account
   ## templates/broker-service-account.yaml
   service_account:
-    annotations: {}
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::454759051864:role/irsa-awstest
 
 ## Pulsar: Functions Worker
 ## templates/function-worker-configmap.yaml
