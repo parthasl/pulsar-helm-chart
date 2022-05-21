@@ -17,6 +17,7 @@
 # under the License.
 #
 
+# add athenz n cameo changes
 # deploy zookeeper only when `components.zookeeper` is true
 {{- if .Values.components.zookeeper }}
 apiVersion: apps/v1
